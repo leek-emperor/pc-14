@@ -2,20 +2,17 @@
  * @Description:
  * @Author: liutq
  * @Date: 2022-09-21 09:30:55
- * @LastEditTime: 2022-09-21 10:41:58
+ * @LastEditTime: 2022-09-21 15:29:29
  * @LastEditors: liutq
  * @Reference:
  */
-import './App.css';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
 import Layout from './pages/Layout';
-import { Button } from 'antd';
+import Login from './pages/Login';
 function App() {
 	return (
 		<BrowserRouter>
 			<div className="App">
-				<Button type="primary">Button</Button>
 				<Routes>
 					{/* 路由path和组件的对应关系 */}
 					<Route path="/" element={<Navigate to="layout" />}></Route>
