@@ -2,7 +2,7 @@
  * @Description:
  * @Author: liutq
  * @Date: 2022-09-21 10:15:52
- * @LastEditTime: 2022-09-22 15:09:37
+ * @LastEditTime: 2022-09-23 20:22:10
  * @LastEditors: liutq
  * @Reference:
  */
@@ -27,7 +27,7 @@ export default function Login() {
 				code: value.password,
 			});
 			// 跳转到首页
-			navigate('/layout');
+			navigate('/');
 			// 提示用户
 			message.success('登录成功');
 		} catch (e) {
