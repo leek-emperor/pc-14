@@ -2,7 +2,7 @@
  * @Description:
  * @Author: liutq
  * @Date: 2022-09-21 10:16:01
- * @LastEditTime: 2022-09-23 22:03:20
+ * @LastEditTime: 2022-09-25 15:10:15
  * @LastEditors: liutq
  * @Reference:
  */
@@ -26,10 +26,13 @@ function GeekLayout() {
 	};
 
 	// 右上角显示用户信息，调用mobx中的数据
-	const { userStore, loginStore } = useStore();
+	const { userStore, loginStore, channelStore } = useStore();
 	useEffect(() => {
+		// 右上角显示用户信息，调用mobx中的数据
 		userStore.getUserInfo();
-	}, [userStore]);
+		// 频道信息
+		channelStore.loadChannelList();
+	}, [userStore, channelStore]);
 
 	// 退出登录
 	const confirm = () => {
