@@ -2,7 +2,7 @@
  * @Description:
  * @Author: liutq
  * @Date: 2022-09-23 09:40:32
- * @LastEditTime: 2022-09-26 14:40:10
+ * @LastEditTime: 2022-09-28 15:22:42
  * @LastEditors: liutq
  * @Reference:
  */
@@ -67,7 +67,7 @@ const Article = () => {
 			dataIndex: 'cover',
 			width: 120,
 			render: cover => {
-				return <img src={cover.images || img404} width={80} height={60} alt="" />;
+				return <img src={cover.images[0] || img404} width={80} height={60} alt="" />;
 			},
 		},
 		{

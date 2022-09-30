@@ -2,22 +2,24 @@
  * @Description:
  * @Author: liutq
  * @Date: 2022-09-23 09:41:15
- * @LastEditTime: 2022-09-26 14:03:57
+ * @LastEditTime: 2022-09-28 15:13:09
  * @LastEditors: liutq
  * @Reference:
  */
-import { Card, Breadcrumb, Form, Button, Radio, Input, Upload, Space, Select } from 'antd';
+import { message, Card, Breadcrumb, Form, Button, Radio, Input, Upload, Space, Select } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './index.scss';
 import { useStore } from '../../store';
 import { observer } from 'mobx-react-lite';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { http } from '../../utils';
 const { Option } = Select;
 const Publish = () => {
+	// 给form一个ref
+	const formRef = useRef();
 	// 获取频道列表
 	const {
 		channelStore: { channelList },
@@ -31,9 +33,19 @@ const Publish = () => {
 	const onUploadChange = res => {
 		// 这里可以优化一下，因为上传是一个异步操作
 		// 所以这setFileList调用了三次
-		setFileList(res.fileList);
+		const formatList = res.fileList.map(file => {
+			// 上传完毕 做数据处理
+			if (file.response) {
+				return {
+					url: file.response.data.url,
+				};
+			}
+			// 否则在上传中时，不做处理
+			return file;
+		});
+		setFileList(formatList);
 		// 同时把图片存入仓库一份
-		cacheImgList.current = res.fileList;
+		cacheImgList.current = formatList;
 	};
 
 	// 切换图片模式
@@ -56,11 +68,34 @@ const Publish = () => {
 			}
 		}
 	};
-
+	//编辑功能
+	// 文案匹配，根据id
+	const [params] = useSearchParams();
+	const articleId = params.get('id');
+	// 数据回填 id调用接口 1、表单回填 2、暂存列表 3、upload组件FileList
+	useEffect(() => {
+		if (articleId) {
+			const loadDetail = async () => {
+				const res = await http.get(`/mp/articles/${articleId}`);
+				// 表单数据回填
+				const { cover, ...formValue } = res.data;
+				formRef.current.setFieldsValue({ ...formValue, type: cover.type });
+				const imageList = cover.images.map(item => {
+					return {
+						url: item,
+					};
+				});
+				setFileList(imageList);
+				// 暂存列表页存一份，也要设置最大的显示图片数
+				setImageCount(cover.type);
+				cacheImgList.current = imageList;
+			};
+			loadDetail();
+		}
+	}, [articleId]);
 	// 提交表单
 	const onFinish = async values => {
 		// 数据的二次处理 重点是处理cover字段
-		console.log(values, fileList);
 		const { channel_id, content, title, type } = values;
 		const params = {
 			channel_id,
@@ -69,10 +104,18 @@ const Publish = () => {
 			type,
 			cover: {
 				type: type,
-				images: type ? fileList.map(item => item.response.data.url) : null,
+				images: type ? fileList.map(item => item.url) : null,
 			},
 		};
-		await http.post('/mp/articles?draft=false', params);
+		if (articleId) {
+			await http.put(`/mp/articles/${articleId}?draft=false`, params);
+		} else {
+			await http.post('/mp/articles?draft=false', params);
+		}
+		// 清空表单，图片使用setFileList清除
+		formRef.current.resetFields();
+		setFileList([]);
+		message.success(`${articleId ? '更新成功' : '发布成功'}`);
 	};
 	return (
 		<div className="publish">
@@ -82,11 +125,12 @@ const Publish = () => {
 						<Breadcrumb.Item>
 							<Link to="/home">首页</Link>
 						</Breadcrumb.Item>
-						<Breadcrumb.Item>发布文章</Breadcrumb.Item>
+						<Breadcrumb.Item>{articleId ? '更新文章' : '发布文章'}</Breadcrumb.Item>
 					</Breadcrumb>
 				}
 			>
 				<Form
+					ref={formRef}
 					labelCol={{ span: 4 }}
 					wrapperCol={{ span: 16 }}
 					initialValues={{ type: 1 }}
@@ -149,7 +193,7 @@ const Publish = () => {
 					<Form.Item wrapperCol={{ offset: 4 }}>
 						<Space>
 							<Button size="large" type="primary" htmlType="submit">
-								发布文章
+								{articleId ? '更新文章' : '发布文章'}
 							</Button>
 						</Space>
 					</Form.Item>
